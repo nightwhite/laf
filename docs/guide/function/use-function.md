@@ -77,7 +77,7 @@ return ("Sorry, we cannot find that!"); // 字符串
 
 这里`ctx.response`对齐`express`框架的`Response`实例
 
-以下是一些常见的 res 对象方法：
+以下是一些常见的 `ctx.response` 对象方法：
 
 ```js
 ctx.response.send(body) // 发送响应体，可以是一个字符串、一个Buffer对象、一个JSON对象、一个数组等
@@ -133,7 +133,7 @@ exports.main = async function (ctx: FunctionContext) {
   // 在数据库等异步操作前面添加 await
   const res = await db.collection('user').get()
   // 同步操作无需添加 await
-  console.log(res.data) 
+  console.log(res) 
 };
 ```
 
