@@ -26,18 +26,15 @@ jobs:
         working-directory: docs
         env:
           LAF_PAT: ${{ secrets.LAF_PAT }}
-        run: |
-          mkdir build
-          cd build/
-          laf login -r https://api.laf.dev $LAF_PAT
+        run: laf login -r https://api.laf.dev $LAF_PAT
       - name: Init appid
-        working-directory: docs/build
+        working-directory: docs/.vitepress
         run: |
           laf app init y7lnyy
           ls
-      - name: Init appid
-        working-directory: docs
-        run: |
-          ls .vitepress/
-          cp .vitepress/dist build/
-          ls build/
+#       - name: Init appid
+#         working-directory: docs
+#         run: |
+#           ls .vitepress/
+#           cp .vitepress/dist build/
+#           ls build/
