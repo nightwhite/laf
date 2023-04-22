@@ -1,10 +1,13 @@
 import SyntaxHighlighter from "react-syntax-highlighter";
 
+import { COLOR_MODE } from "@/constants";
+
 type JSONViewerProps = {
   code: string;
   language?: string;
   showNumber?: boolean;
   colorMode?: string;
+  className?: string;
 };
 
 const JSONViewerStyle: any = {
@@ -235,7 +238,7 @@ const JSONViewerDarkStyle: any = {
   },
 };
 export default function JSONViewer(props: JSONViewerProps) {
-  const { code, language = "json", colorMode = "light" } = props;
+  const { code, language = "json", colorMode = COLOR_MODE.light, ...rest } = props;
   const lightTheme = { background: "#fdfdfe" };
   const darkTheme = {
     background: "#202631",
@@ -248,11 +251,12 @@ export default function JSONViewer(props: JSONViewerProps) {
         maxHeight: 390,
         overflow: "auto",
       }}
+      {...rest}
     >
       <SyntaxHighlighter
         language={language}
-        style={colorMode === "dark" ? JSONViewerDarkStyle : JSONViewerStyle}
-        customStyle={colorMode === "dark" ? darkTheme : lightTheme}
+        style={colorMode === COLOR_MODE.dark ? JSONViewerDarkStyle : JSONViewerStyle}
+        customStyle={colorMode === COLOR_MODE.dark ? darkTheme : lightTheme}
       >
         {code}
       </SyntaxHighlighter>

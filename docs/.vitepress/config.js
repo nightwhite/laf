@@ -27,7 +27,7 @@ const guideSiderbarConfig = [
       {
         text: "概览",
         link: "/guide/",
-      }
+      },
     ],
   },
   {
@@ -65,7 +65,15 @@ const guideSiderbarConfig = [
             text: "在云函数中调用",
             link: "/guide/function/call-function",
           },
+          {
+            text: "HTTP调用",
+            link: "/guide/function/call-function-in-http",
+          },
         ],
+      },
+      {
+        text: "云函数日志",
+        link: "/guide/function/logs",
       },
       {
         text: "依赖管理",
@@ -83,12 +91,17 @@ const guideSiderbarConfig = [
         text: "WebSocket 连接",
         link: "/guide/function/websocket",
       },
+      {
+        text: "拦截器",
+        link: "/guide/function/interceptor",
+      },
     ],
   },
   {
     text: "云数据库",
     items: [
-      { text: "云数据库简介", link: "/guide/db/" },
+      { text: "数据库简介", link: "/guide/db/" },
+      { text: "数据库入门", link: "/guide/db/quickstart" },
       { text: "数据查询", link: "/guide/db/query" },
       { text: "数据操作", link: "/guide/db/actions" },
       { text: "访问策略", link: "/guide/db/policy" },
@@ -168,14 +181,13 @@ const examplesSideBarConfig = [
         text: "使用 SMTP 服务发送邮件",
         link: "/examples/send-mail",
       },
-    ]
-  }, {
-    text: '前端应用',
-    items: [
-      { text: 'Todo List', link: '/examples/todo-list', },
-    ]
-  }
-]
+    ],
+  },
+  {
+    text: "前端应用",
+    items: [{ text: "Todo List", link: "/examples/todo-list" }],
+  },
+];
 
 export default defineConfig({
   lang: "zh-CN",
@@ -199,10 +211,10 @@ export default defineConfig({
       message: "Apache License V2.0",
       copyright: "Copyright © 2021-present labring/laf",
     },
-    editLink: {
-      pattern: "https://github.com/labring/laf/edit/main/docs/:path",
-      text: "在 GitHub 上编辑此页",
-    },
+    // editLink: {
+    //   pattern: "https://github.com/labring/laf/edit/main/docs/:path",
+    //   text: "在 GitHub 上编辑此页",
+    // },
     lastUpdated: "更新于",
     nav: NavConfig,
     socialLinks: [{ icon: "github", link: "https://github.com/labring/laf" }],
