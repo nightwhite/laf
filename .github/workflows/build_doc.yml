@@ -32,9 +32,4 @@ jobs:
         run: |
           laf app init y7lnyy
           ls
-#       - name: Init appid
-#         working-directory: docs
-#         run: |
-#           ls .vitepress/
-#           cp .vitepress/dist build/
-#           ls build/
+          laf storage push -f y7lnyy-doc dist/
