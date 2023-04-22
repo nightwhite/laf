@@ -32,7 +32,9 @@ jobs:
           laf login -r https://api.laf.dev $LAF_PAT
       - name: Init appid
         working-directory: docs/build
-        run: laf app init y7lnyy
-      - name: Init appid
-        working-directory: docs
-        run: cp .vitepress/dist build/ && ls build/
+        run: |
+          laf app init y7lnyy
+          ls
+#       - name: Init appid
+#         working-directory: docs
+#         run: cp .vitepress/dist build/ && ls build/
