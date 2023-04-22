@@ -31,10 +31,12 @@ jobs:
           cd build/
           laf login -r https://api.laf.dev $LAF_PAT
           laf app init y7lnyy
+          ls
           cd ..
+          ls
           cp .vitepress/dist build/
           cd build/
-          ls
+          
         
         
 
