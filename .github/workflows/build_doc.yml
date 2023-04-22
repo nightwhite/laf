@@ -6,8 +6,8 @@ on:
       - '!main'
       
 env:
-  BUCKET_NAME: "y7lnyy-doc"
-  LAF_APPID: "y7lnyy"
+  BUCKET_NAME: ${{ secrets.DOC_BUCKET_NAME }}
+  LAF_APPID: ${{ secrets.LAF_APPID }}
   LAF_PAT: ${{ secrets.LAF_PAT }}
       
 jobs:
@@ -36,5 +36,4 @@ jobs:
           LAF_APPID: ${{ env.LAF_APPID }}
         run: |
           laf app init ${{ env.LAF_APPID }}
-          ls
           laf storage push -f ${{ env.BUCKET_NAME }} dist/
