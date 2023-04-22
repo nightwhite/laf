@@ -1,9 +1,13 @@
 name: Build
 on:
   push:
-#     branches:
-#       - '*'
-  workflow_dispatch:
+    branches:
+      - '*'
+      
+env:
+  BUCKET_NAME: "y7lnyy-doc"
+  LAF_APPID: "y7lnyy"
+  LAF_PAT: ${{ secrets.LAF_PAT }}
       
 jobs:
   build:
@@ -23,13 +27,13 @@ jobs:
       - name: Install Laf-CLI
         run: npm i laf-cli -g
       - name: Login laf-cli
-        working-directory: docs
-        env:
-          LAF_PAT: ${{ secrets.LAF_PAT }}
+        working-directory: docs          
         run: laf login -r https://api.laf.dev $LAF_PAT
       - name: Init appid
         working-directory: docs/.vitepress
+        env:
+          LAF_APPID: ${{ env.LAF_APPID }}
         run: |
-          laf app init y7lnyy
+          laf app init ${{ env.LAF_APPID }}
           ls
-          laf storage push -f y7lnyy-doc dist/
+          laf storage push -f ${{ env.BUCKET_NAME }} dist/
