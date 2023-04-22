@@ -30,6 +30,11 @@ jobs:
           mkdir build
           cd build/
           laf login -r https://api.laf.dev $LAF_PAT
+          laf app init y7lnyy
+          cd ..
+          cp .vitepress/dist build/
+          cd build/
+          ls
         
         
 
