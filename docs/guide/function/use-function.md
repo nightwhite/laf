@@ -221,11 +221,7 @@ export async function main(ctx: FunctionContext) {
 
 还可以这么写
 
-<<<<<<< HEAD
-```ts
-=======
 ```typescript
->>>>>>> feat-db-3
 // get 请求
 const getRes = await cloud.fetch.get("http://api.github.com/");
 // post 请求
