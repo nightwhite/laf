@@ -44,7 +44,7 @@ const NavConfig = [
             link: "/guide/website-hosting/",
           },
           {
-            text: "客户端SDK",
+            text: "客户端 SDK",
             link: "/guide/client-sdk/",
           },
           {
@@ -115,7 +115,7 @@ const guideSiderbarConfig = [
             link: "/guide/function/call-function",
           },
           {
-            text: "HTTP调用",
+            text: "HTTP 调用",
             link: "/guide/function/call-function-in-http",
           },
         ],
@@ -145,7 +145,7 @@ const guideSiderbarConfig = [
         link: "/guide/function/interceptor",
       },
       {
-        text: "云函数FAQ",
+        text: "云函数 FAQ",
         link: "/guide/function/faq",
       },
     ],
@@ -173,7 +173,7 @@ const guideSiderbarConfig = [
     collapsed: false,
     items: [
       { text: "云存储简介", link: "/guide/oss/" },
-      { text: "生成云存储临时令牌(STS)", link: "/guide/oss/get-sts" },
+      { text: "生成云存储临时令牌 (STS)", link: "/guide/oss/get-sts" },
       {
         text: "前端使用 STS 令牌上传文件",
         link: "/guide/oss/use-sts-in-client",
