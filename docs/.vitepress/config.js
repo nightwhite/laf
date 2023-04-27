@@ -55,7 +55,6 @@ const NavConfig = [
       },
     ],
   },
-  { text: "API", link: "/api/cloud", activeMatch: "^/api/" },
   { text: "范例", link: "/examples/aliyun-sms", activeMatch: "^/examples/" },
   { text: "预览图", link: "/screenshots" },
   {
@@ -104,6 +103,45 @@ const guideSiderbarConfig = [
         link: "/guide/function/use-function",
       },
       {
+        text: "云函数 SDK",
+        collapsed: false,
+        // link: "/guide/function/function-sdk",
+        items: [
+          {
+            text: "SDK 简介",
+            link: "/guide/function/function-sdk#frontmatter-title",
+          },
+          {
+            text: "导入 SDK",
+            link: "/guide/function/function-sdk#导入-sdk",
+          },
+          {
+            text: "发送网络请求",
+            link: "/guide/function/function-sdk#发送网络请求",
+          },
+          {
+            text: "操作数据库",
+            link: "/guide/function/function-sdk#操作数据库",
+          },
+          {
+            text: "调用其他云函数",
+            link: "/guide/function/function-sdk#调用其他云函数",
+          },
+          {
+            text: "生成和解密 JWT Token",
+            link: "/guide/function/function-sdk#生成和解密-jwt-token",
+          },
+          {
+            text: "云函数全局缓存",
+            link: "/guide/function/function-sdk#云函数全局缓存",
+          },
+          {
+            text: "原生 MongoDriver 实例",
+            link: "/guide/function/function-sdk#云函数原生-mongodriverobject-实例",
+          },
+        ],
+      },
+      {
         text: "调用云函数",
         items: [
           {
@@ -145,6 +183,10 @@ const guideSiderbarConfig = [
         link: "/guide/function/interceptor",
       },
       {
+        text: "应用初始化",
+        link: "/guide/function/init",
+      },
+      {
         text: "云函数 FAQ",
         link: "/guide/function/faq",
       },
@@ -162,10 +204,11 @@ const guideSiderbarConfig = [
       { text: "删除数据", link: "/guide/db/del" },
       { text: "数据库操作符", link: "/guide/db/command" },
       { text: "数据库聚合操作", link: "/guide/db/aggregate" },
-      {
-        text: "操作地理信息",
-        link: "/guide/db/geo",
-      },
+      { text: "数据库运算", link: "/guide/db/operator" },
+      // {
+      //   text: "操作地理信息",
+      //   link: "/guide/db/geo",
+      // },
     ],
   },
   {
@@ -173,6 +216,8 @@ const guideSiderbarConfig = [
     collapsed: false,
     items: [
       { text: "云存储简介", link: "/guide/oss/" },
+      { text: "云函数调用云存储", link: "/guide/oss/oss-by-function" },
+      { text: "前端通过云函数上传文件", link: "/guide/oss/upload-by-function" },
       { text: "生成云存储临时令牌 (STS)", link: "/guide/oss/get-sts" },
       {
         text: "前端使用 STS 令牌上传文件",
@@ -196,21 +241,6 @@ const guideSiderbarConfig = [
     items: [
       { text: "laf-client-sdk 使用说明", link: "/guide/client-sdk/" },
       { text: "数据库访问策略", link: "/guide/db/policy" },
-    ],
-  },
-];
-
-/**
- * @type {DefaultTheme.MultiSideBarConfig}
- */
-const apiSideBarConfig = [
-  {
-    text: "云函数",
-    items: [
-      {
-        text: "Cloud SDK",
-        link: "/api/cloud",
-      },
     ],
   },
 ];
@@ -285,7 +315,6 @@ export default defineConfig({
     ],
     sidebar: {
       "/guide/": guideSiderbarConfig,
-      "/api/": apiSideBarConfig,
       "/examples/": examplesSideBarConfig,
     },
   },

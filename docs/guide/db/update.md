@@ -4,21 +4,13 @@ title: 更新数据
 
 # {{ $frontmatter.title }}
 
-<<<<<<< HEAD
-Laf云数据库更新数据，实际上就是针对集合中的文档进行修改，通过 `where` 等操作符设置查询条件，然后通过 `update` 或 `set` 等更新操作符进行修改。
-=======
 Laf 云数据库更新数据，实际上就是针对集合中的文档进行修改，通过 `where` 等操作符设置查询条件，然后通过 `update` 或 `set` 等更新操作符进行修改。
->>>>>>> feat-db-4
 
 ## 更新文档
 
 ### 更新指定文档
 
-<<<<<<< HEAD
-我们这里把 jack 的名字改为 Tom 。
-=======
 我们这里把 jack 的名字改为 Tom。
->>>>>>> feat-db-4
 
 ```typescript
 await db.collection('user')
@@ -26,11 +18,7 @@ await db.collection('user')
 .update({ name: "Tom" })
 ```
 
-<<<<<<< HEAD
-同样我们也可以一次更新同一个文档的多个属性，比如: 更改名字的同时也更改年龄。
-=======
 同样我们也可以一次更新同一个文档的多个属性，比如：更改名字的同时也更改年龄。
->>>>>>> feat-db-4
 
 ```typescript
 await db.collection('user')
@@ -90,11 +78,7 @@ await db.collection("user")
 
 ### mul
 
-<<<<<<< HEAD
-更新指令。用于指示字段自乘某个值。需要是正整数或者负整数或者0。
-=======
 更新指令。用于指示字段自乘某个值。需要是正整数或者负整数或者 0。
->>>>>>> feat-db-4
 
 ### remove
 

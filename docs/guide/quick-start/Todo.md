@@ -21,6 +21,7 @@ title: 快速开始
 ![create-function](../../doc-images/create-function.png)
 
 然后在`get-list`云函数中写上以下代码，写完以后记得在右上角找到`发布`两个字，点一下发布。
+然后在`get-list`云函数中写上以下代码，写完以后记得在右上角找到`发布`两个字，点一下发布。
 
 ```typescript
 import cloud from '@lafjs/cloud'
@@ -35,6 +36,7 @@ export async function main(ctx: FunctionContext) {
 ```
 
 按照刚刚的方式我们再创建 `add-todo` `del-todo` `update-todo`，三个云函数，并分别写入代码。
+
 `add-todo`
 
 ```typescript
@@ -161,7 +163,8 @@ async function del(id) {
 }
 ```
 
-到这里我们已经完成了项目的核心功能，你也可以下载代码模板来体验
+到这里我们已经完成了项目的核心功能，你也可以下载代码模板来体验。
+
 :::tip
 需要在 src/App.vue 中修改 `<AppID>`
 :::

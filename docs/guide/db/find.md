@@ -487,10 +487,14 @@ const db = cloud.database()
 
 export async function main(ctx: FunctionContext) {
 <<<<<<< HEAD
+<<<<<<< HEAD
   // 查询arr内某个元素的name为 'item-2' 的文档
 =======
   // 查询 arr 内某个元素的 name 为 'item-2' 的文档
 >>>>>>> feat-db-4
+=======
+  // 查询 arr 内某个元素的 name 为 'item-2' 的文档
+>>>>>>> feat-oss-2
   const result = await db.collection('test')
   .where({
     'arr.name': "item-2"
@@ -527,7 +531,10 @@ collection.field() 只返回指定字段
 | -    | object | 是   | 要过滤的字段，不返回传 0，返回传 1 |
 
 ::: tip
+<<<<<<< HEAD
 
+=======
+>>>>>>> feat-oss-2
 备注：只能指定要返回的字段或者不要返回的字段，即 `{'a': 1, 'b': 0}` 是一种错误的参数格式。默认会显示 id。
 :::
 
