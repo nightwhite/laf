@@ -133,6 +133,10 @@ export async function main(ctx: FunctionContext)  {
 };
 ```
 
+:::tip
+当云函数请求的 `header` 中的 `authorization` 带 `token`，就可以直接用 `ctx.user` 自动解密
+:::
+
 ![getToken-parseToken](/doc-images/getToken-parseToken.png)
 
 以下实现简单登录函数，并生成 JWT token
