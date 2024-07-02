@@ -122,51 +122,60 @@ export class GroupInviteService {
 
   async findOneByCodeDetail(code: string) {
     try {
+      const pipeline = [
+        { $match: { code } },
+        {
+          $lookup: {
+            from: "User",
+            localField: "createdBy",
+            foreignField: "_id",
+            pipeline: [
+              {
+                $project: { username: 1 },
+              },
+            ],
+            as: "invitedBy",
+          },
+        },
+        { $unwind: "$invitedBy" },
+        {
+          $lookup: {
+            from: "Group",
+            localField: "groupId",
+            foreignField: "_id",
+            pipeline: [
+              {
+                $project: { name: 1, appid: 1 },
+              },
+            ],
+            as: "group",
+          },
+        },
+        { $unwind: "$group" },
+        {
+          $project: {
+            _id: 0,
+            role: 1,
+            code: 1,
+            usedBy: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            invitedBy: {
+              _id: "$invitedBy._id",
+              username: "$invitedBy.username",
+            },
+            group: {
+              _id: "$group._id",
+              name: "$group.name",
+              appid: "$group.appid",
+            },
+          },
+        },
+      ];
+
       const res = await this.db
         .collection<GroupInviteCode>("GroupInviteCode")
-        .aggregate()
-        .match({ code })
-        .lookup({
-          from: "User",
-          localField: "createdBy",
-          foreignField: "_id",
-          pipeline: [
-            {
-              $project: { username: 1 },
-            },
-          ],
-          as: "invitedBy",
-        })
-        .unwind("$invitedBy")
-        .lookup({
-          from: "Group",
-          localField: "groupId",
-          foreignField: "_id",
-          pipeline: [
-            {
-              $project: { name: 1, appid: 1 },
-            },
-          ],
-          as: "group",
-        })
-        .unwind("$group")
-        .project<GetGroupInviteCodeDetailDto>({
-          _id: 0,
-          role: 1,
-          code: 1,
-          usedBy: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          invitedBy: {
-            _id: "$invitedBy._id",
-            username: "$invitedBy.username",
-          },
-          group: {
-            _id: "$group._id",
-            name: "$group.name",
-            appid: "$group.appid",
-          },
-        })
+        .aggregate(pipeline)
         .next();
 
       return res;

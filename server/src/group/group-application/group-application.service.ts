@@ -8,53 +8,62 @@ export class GroupApplicationService {
   private readonly db = SystemDatabase.db
 
   async find(groupId: ObjectId) {
+    const pipeline = [
+        { $match: { groupId } },
+        {
+            $lookup: {
+                from: 'Application',
+                localField: 'appid',
+                foreignField: 'appid',
+                as: 'application',
+            },
+        },
+        { $unwind: '$application' },
+        {
+            $project: {
+                _id: 0,
+                appid: '$application.appid',
+                name: '$application.name',
+            },
+        },
+    ];
+
     const res = await this.db
-      .collection<GroupApplication>('GroupApplication')
-      .aggregate()
-      .match({
-        groupId,
-      })
-      .lookup({
-        from: 'Application',
-        localField: 'appid',
-        foreignField: 'appid',
-        as: 'application',
-      })
-      .unwind('$application')
-      .project({
-        _id: 0,
-        appid: '$application.appid',
-        name: '$application.name',
-      })
-      .toArray()
+        .collection<GroupApplication>('GroupApplication')
+        .aggregate(pipeline)
+        .toArray();
 
-    return res
-  }
+    return res;
+}
 
-  async findOne(groupId: ObjectId, appid: string) {
+async findOne(groupId: ObjectId, appid: string) {
+    const pipeline = [
+        { $match: { groupId, appid } },
+        {
+            $lookup: {
+                from: 'Application',
+                localField: 'appid',
+                foreignField: 'appid',
+                as: 'application',
+            },
+        },
+        { $unwind: '$application' },
+        {
+            $project: {
+                _id: 0,
+                appid: '$application.appid',
+                name: '$application.name',
+            },
+        },
+    ];
+
     const res = await this.db
-      .collection<GroupApplication>('GroupApplication')
-      .aggregate()
-      .match({
-        groupId,
-        appid,
-      })
-      .lookup({
-        from: 'Application',
-        localField: 'appid',
-        foreignField: 'appid',
-        as: 'application',
-      })
-      .unwind('$application')
-      .project({
-        _id: 0,
-        appid: '$application.appid',
-        name: '$application.name',
-      })
-      .next()
+        .collection<GroupApplication>('GroupApplication')
+        .aggregate(pipeline)
+        .next();
 
-    return res
-  }
+    return res;
+}
 
   async append(groupId: ObjectId, appid: string, session?: ClientSession) {
     const res = await this.db

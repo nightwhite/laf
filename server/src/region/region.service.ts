@@ -49,28 +49,33 @@ export class RegionService {
   }
 
   async findAllDesensitized() {
-    const projection = {
-      _id: 1,
-      name: 1,
-      displayName: 1,
-      state: 1,
-      bundles: 1,
-      dedicatedDatabase: '$databaseConf.dedicatedDatabase.enabled',
-    }
+    const pipeline = [
+      { $match: {} },
+      {
+        $lookup: {
+          from: "ResourceBundle",
+          localField: "_id",
+          foreignField: "regionId",
+          as: "bundles",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          displayName: 1,
+          state: 1,
+          bundles: 1,
+          dedicatedDatabase: "$databaseConf.dedicatedDatabase.enabled",
+        },
+      },
+    ];
 
     const regions = await this.db
-      .collection<Region>('Region')
-      .aggregate()
-      .match({})
-      .lookup({
-        from: 'ResourceBundle',
-        localField: '_id',
-        foreignField: 'regionId',
-        as: 'bundles',
-      })
-      .project(projection)
-      .toArray()
+      .collection<Region>("Region")
+      .aggregate(pipeline)
+      .toArray();
 
-    return regions
+    return regions;
   }
 }
