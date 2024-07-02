@@ -42,31 +42,36 @@ export class PolicyService {
   }
 
   async findAll(appid: string) {
-    const res = await this.db
-      .collection('DatabasePolicy')
-      .aggregate<DatabasePolicyWithRules>()
-      .match({ appid })
-      .lookup({
-        from: 'DatabasePolicyRule',
-        let: { name: '$name', appid: '$appid' },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ['$appid', '$$appid'] },
-                  { $eq: ['$policyName', '$$name'] },
+    try {
+        const res = await this.db
+            .collection('DatabasePolicy')
+            .aggregate<DatabasePolicyWithRules>()
+            .match({ appid })
+            .lookup({
+                from: 'DatabasePolicyRule',
+                let: { name: '$name', appid: '$appid' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$appid', '$$appid'] },
+                                    { $eq: ['$policyName', '$$name'] },
+                                ],
+                            },
+                        },
+                    },
                 ],
-              },
-            },
-          },
-        ],
-        as: 'rules',
-      })
-      .toArray()
+                as: 'rules',
+            })
+            .toArray();
 
-    return res
-  }
+        return res;
+    } catch (error) {
+        console.error('Error fetching database policies:', error);
+        throw new Error('Failed to get database policies');
+    }
+}
 
   async findOne(appid: string, name: string) {
     const policy = await this.db

@@ -427,85 +427,90 @@ export class AccountService {
     return inviteCode
   }
 
-  async getInviteProfit(uid: ObjectId, page: number, pageSize: number) {
-    const query = {
-      invitedBy: uid,
-    }
-    const pipe = [
-      {
-        $match: query,
-      },
-      {
-        $lookup: {
-          from: 'User',
-          let: { userId: '$uid' },
-          pipeline: [
+async getInviteProfit(uid: ObjectId, page: number, pageSize: number) {
+    try {
+        const query = {
+            invitedBy: uid,
+        };
+        const pipe = [
             {
-              $match: {
-                $expr: {
-                  $eq: ['$_id', '$$userId'],
+                $match: query,
+            },
+            {
+                $lookup: {
+                    from: 'User',
+                    let: { userId: '$uid' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $eq: ['$_id', '$$userId'],
+                                },
+                            },
+                        },
+                        {
+                            $project: { username: 1, _id: 0 },
+                        },
+                    ],
+                    as: 'user',
                 },
-              },
             },
             {
-              $project: { username: 1, _id: 0 },
-            },
-          ],
-          as: 'user',
-        },
-      },
-      {
-        $lookup: {
-          from: 'AccountTransaction',
-          let: { transactionId: '$transactionId' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ['$_id', '$$transactionId'],
+                $lookup: {
+                    from: 'AccountTransaction',
+                    let: { transactionId: '$transactionId' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $eq: ['$_id', '$$transactionId'],
+                                },
+                            },
+                        },
+                        {
+                            $project: { amount: 1, _id: 0 },
+                        },
+                    ],
+                    as: 'transaction',
                 },
-              },
             },
             {
-              $project: { amount: 1, _id: 0 },
+                $addFields: {
+                    username: { $arrayElemAt: ['$user.username', 0] },
+                    inviteProfit: { $arrayElemAt: ['$transaction.amount', 0] },
+                },
             },
-          ],
-          as: 'transaction',
-        },
-      },
-      {
-        $addFields: {
-          username: { $arrayElemAt: ['$user.username', 0] },
-          inviteProfit: { $arrayElemAt: ['$transaction.amount', 0] },
-        },
-      },
-      {
-        $project: {
-          user: 0,
-          transaction: 0,
-        },
-      },
-      { $sort: { createdAt: -1 } },
-      { $skip: (page - 1) * pageSize },
-      { $limit: pageSize },
-    ]
+            {
+                $project: {
+                    user: 0,
+                    transaction: 0,
+                },
+            },
+            { $sort: { createdAt: -1 } },
+            { $skip: (page - 1) * pageSize },
+            { $limit: pageSize },
+        ];
 
-    const total = await this.db
-      .collection<InviteRelation>('InviteRelation')
-      .countDocuments(query)
+        const total = await this.db
+            .collection<InviteRelation>('InviteRelation')
+            .countDocuments(query);
 
-    const inviteCodeProfits = await this.db
-      .collection<InviteRelation>('InviteRelation')
-      .aggregate(pipe)
-      .toArray()
+        const inviteCodeProfits = await this.db
+            .collection<InviteRelation>('InviteRelation')
+            .aggregate(pipe)
+            .toArray();
 
-    const res = {
-      list: inviteCodeProfits,
-      total,
-      page,
-      pageSize,
+        const res = {
+            list: inviteCodeProfits,
+            total,
+            page,
+            pageSize,
+        };
+
+        return res;
+    } catch (error) {
+        console.error('Error fetching invite profit:', error);
+        throw new Error('Failed to get invite profit data');
     }
-
-    return res
-  }
+}
 }
