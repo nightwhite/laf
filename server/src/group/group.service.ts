@@ -25,50 +25,57 @@ export class GroupService {
     return res
   }
 
-  async findAll(uid: ObjectId) {
-    const res = await this.db
-      .collection<GroupMember>('GroupMember')
-      .aggregate()
-      .match({ uid })
-      .lookup({
-        from: 'Group',
-        foreignField: '_id',
-        localField: 'groupId',
-        pipeline: [
-          {
-            $match: {
-              appid: null,
-            },
-          },
-        ],
-        as: 'group',
-      })
-      .unwind('$group')
-      .lookup({
-        from: 'GroupMember',
-        foreignField: 'groupId',
-        localField: 'groupId',
-        pipeline: [
-          {
-            $project: {
-              _id: 0,
-              role: 1,
-              uid: 1,
-            },
-          },
-        ],
-        as: 'members',
-      })
-      .project({
-        _id: '$group._id',
-        name: '$group.name',
-        createdAt: '$group.createdAt',
-        updatedAt: '$group.updatedAt',
-        members: '$members',
-      })
-      .toArray()
-    return res
-  }
+
+async findAll(uid: ObjectId) {
+    try {
+        const res = await this.db
+            .collection<GroupMember>('GroupMember')
+            .aggregate()
+            .match({ uid })
+            .lookup({
+                from: 'Group',
+                foreignField: '_id',
+                localField: 'groupId',
+                pipeline: [
+                    {
+                        $match: {
+                            appid: null,
+                        },
+                    },
+                ],
+                as: 'group',
+            })
+            .unwind('$group')
+            .lookup({
+                from: 'GroupMember',
+                foreignField: 'groupId',
+                localField: 'groupId',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 0,
+                            role: 1,
+                            uid: 1,
+                        },
+                    },
+                ],
+                as: 'members',
+            })
+            .project({
+                _id: '$group._id',
+                name: '$group.name',
+                createdAt: '$group.createdAt',
+                updatedAt: '$group.updatedAt',
+                members: '$members',
+            })
+            .toArray();
+            
+        return res;
+    } catch (error) {
+        console.error('Error fetching group members:', error);
+        throw new Error('Failed to get group members');
+    }
+}
 
   async countGroups(uid: ObjectId) {
     const count = await this.db
@@ -79,42 +86,47 @@ export class GroupService {
   }
 
   async findGroupsByAppidAndUid(appid: string, uid: ObjectId) {
-    const res = await this.db
-      .collection<GroupApplication>('GroupApplication')
-      .aggregate()
-      .match({ appid })
-      .lookup({
-        from: 'Group',
-        localField: 'groupId',
-        foreignField: '_id',
-        as: 'group',
-      })
-      .unwind('$group')
-      .lookup({
-        from: 'GroupMember',
-        localField: 'groupId',
-        foreignField: 'groupId',
-        pipeline: [
-          {
-            $match: {
-              uid,
-            },
-          },
-        ],
-        as: 'member',
-      })
-      .unwind('$member')
-      .project({
-        _id: '$group._id',
-        name: '$group.name',
-        createdAt: '$group.createdAt',
-        updatedAt: '$group.updatedAt',
-        role: '$member.role',
-      })
-      .toArray()
+    try {
+        const res = await this.db
+            .collection<GroupApplication>('GroupApplication')
+            .aggregate()
+            .match({ appid })
+            .lookup({
+                from: 'Group',
+                localField: 'groupId',
+                foreignField: '_id',
+                as: 'group',
+            })
+            .unwind('$group')
+            .lookup({
+                from: 'GroupMember',
+                localField: 'groupId',
+                foreignField: 'groupId',
+                pipeline: [
+                    {
+                        $match: {
+                            uid,
+                        },
+                    },
+                ],
+                as: 'member',
+            })
+            .unwind('$member')
+            .project({
+                _id: '$group._id',
+                name: '$group.name',
+                createdAt: '$group.createdAt',
+                updatedAt: '$group.updatedAt',
+                role: '$member.role',
+            })
+            .toArray();
 
-    return res
-  }
+        return res;
+    } catch (error) {
+        console.error('Error fetching groups by appid and uid:', error);
+        throw new Error('Failed to get groups data');
+    }
+}
 
   async update(groupId: ObjectId, dto: Partial<Group>) {
     const res = await this.db.collection<Group>('Group').findOneAndUpdate(

@@ -121,54 +121,59 @@ export class GroupInviteService {
   }
 
   async findOneByCodeDetail(code: string) {
-    const res = await this.db
-      .collection<GroupInviteCode>('GroupInviteCode')
-      .aggregate()
-      .match({ code })
-      .lookup({
-        from: 'User',
-        localField: 'createdBy',
-        foreignField: '_id',
-        pipeline: [
-          {
-            $project: { username: 1 },
+    try {
+      const res = await this.db
+        .collection<GroupInviteCode>("GroupInviteCode")
+        .aggregate()
+        .match({ code })
+        .lookup({
+          from: "User",
+          localField: "createdBy",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: { username: 1 },
+            },
+          ],
+          as: "invitedBy",
+        })
+        .unwind("$invitedBy")
+        .lookup({
+          from: "Group",
+          localField: "groupId",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: { name: 1, appid: 1 },
+            },
+          ],
+          as: "group",
+        })
+        .unwind("$group")
+        .project<GetGroupInviteCodeDetailDto>({
+          _id: 0,
+          role: 1,
+          code: 1,
+          usedBy: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          invitedBy: {
+            _id: "$invitedBy._id",
+            username: "$invitedBy.username",
           },
-        ],
-        as: 'invitedBy',
-      })
-      .unwind('$invitedBy')
-      .lookup({
-        from: 'Group',
-        localField: 'groupId',
-        foreignField: '_id',
-        pipeline: [
-          {
-            $project: { name: 1, appid: 1 },
+          group: {
+            _id: "$group._id",
+            name: "$group.name",
+            appid: "$group.appid",
           },
-        ],
-        as: 'group',
-      })
-      .unwind('$group')
-      .project<GetGroupInviteCodeDetailDto>({
-        _id: 0,
-        role: 1,
-        code: 1,
-        usedBy: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        invitedBy: {
-          _id: '$invitedBy._id',
-          username: '$invitedBy.username',
-        },
-        group: {
-          _id: '$group._id',
-          name: '$group.name',
-          appid: '$group.appid',
-        },
-      })
-      .next()
+        })
+        .next();
 
-    return res
+      return res;
+    } catch (error) {
+      console.error("Error finding code detail:", error);
+      throw new Error("Failed to find code detail");
+    }
   }
 
   async deleteInviteCode(inviteCode: GroupInviteCode, session?: ClientSession) {

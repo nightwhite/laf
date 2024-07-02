@@ -83,68 +83,75 @@ export class BillingService {
   }
 
   async getExpenseByDay(userId: ObjectId, condition?: BillingQuery) {
-    const query = { createdBy: userId }
+    try {
+        const query = { createdBy: userId };
 
-    if (condition.startTime) {
-      query['startAt'] = { $gte: condition.startTime }
-    }
+        if (condition && condition.startTime) {
+            query['startAt'] = { $gte: condition.startTime };
+        }
 
-    if (condition.endTime) {
-      if (condition.startTime) {
-        query['startAt']['$lte'] = condition.endTime
-      } else {
-        query['startAt'] = { $lte: condition.endTime }
-      }
-    }
+        if (condition && condition.endTime) {
+            if (condition.startTime) {
+                query['startAt']['$lte'] = condition.endTime;
+            } else {
+                query['startAt'] = { $lte: condition.endTime };
+            }
+        }
 
-    if (condition.appid) {
-      query['appid'] = { $in: condition.appid }
-    }
+        if (condition && condition.appid) {
+            query['appid'] = { $in: condition.appid };
+        }
 
-    if (condition.state) {
-      query['state'] = condition.state
-    }
-    const pipeline = [
-      {
-        $match: query,
-      },
-      {
-        $project: {
-          day: {
-            $dateToString: { format: '%Y-%m-%d', date: '$startAt' },
-          },
-          amount: 1,
-        },
-      },
-      {
-        $group: {
-          _id: '$day',
-          totalAmount: { $sum: '$amount' },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          day: {
-            $dateFromString: {
-              dateString: '$_id',
-              format: '%Y-%m-%d',
+        if (condition && condition.state) {
+            query['state'] = condition.state;
+        }
+        
+        const pipeline = [
+            {
+                $match: query,
             },
-          },
-          totalAmount: 1,
-        },
-      },
-      {
-        $sort: { day: -1 },
-      },
-    ]
-    const expense = await this.db
-      .collection<ApplicationBilling>('ApplicationBilling')
-      .aggregate(pipeline)
-      .toArray()
+            {
+                $project: {
+                    day: {
+                        $dateToString: { format: '%Y-%m-%d', date: '$startAt' },
+                    },
+                    amount: 1,
+                },
+            },
+            {
+                $group: {
+                    _id: '$day',
+                    totalAmount: { $sum: '$amount' },
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    day: {
+                        $dateFromString: {
+                            dateString: '$_id',
+                            format: '%Y-%m-%d',
+                        },
+                    },
+                    totalAmount: 1,
+                },
+            },
+            {
+                $sort: { day: -1 },
+            },
+        ];
 
-    return expense
-  }
+        const expense = await this.db
+            .collection<ApplicationBilling>('ApplicationBilling')
+            .aggregate(pipeline)
+            .toArray();
+
+        return expense;
+    } catch (error) {
+        console.error('Error fetching expense by day:', error);
+        throw new Error('Failed to get expense data');
+    }
+}
 
   async getExpense(userId: ObjectId, condition?: BillingQuery) {
     const query = { createdBy: userId }
