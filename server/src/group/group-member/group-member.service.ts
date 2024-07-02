@@ -40,28 +40,35 @@ export class GroupMemberService {
   }
 
   async find(groupId: ObjectId) {
-    const res = await this.db
-      .collection<GroupMember>('GroupMember')
-      .aggregate()
-      .match({ groupId })
-      .lookup({
-        from: 'User',
-        foreignField: '_id',
-        localField: 'uid',
-        as: 'user',
-      })
-      .unwind('$user')
-      .project<FindGroupMemberDto>({
-        _id: 0,
-        uid: 1,
-        role: 1,
-        username: '$user.username',
-        createdAt: 1,
-        updatedAt: 1,
-      })
-      .toArray()
+    const pipeline = [
+      { $match: { groupId } },
+      {
+        $lookup: {
+          from: "User",
+          localField: "uid",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $project: {
+          _id: 0,
+          uid: 1,
+          role: 1,
+          username: "$user.username",
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+    ];
 
-    return res
+    const res = await this.db
+      .collection<GroupMember>("GroupMember")
+      .aggregate(pipeline)
+      .toArray();
+
+    return res;
   }
 
   async addOne(

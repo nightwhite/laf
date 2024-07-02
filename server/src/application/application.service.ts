@@ -135,64 +135,87 @@ export class ApplicationService {
   }
 
   async findAllByUser(userid: ObjectId) {
-    const db = SystemDatabase.db
+    const db = SystemDatabase.db;
 
-    const doc = await db
-      .collection<GroupMember>('GroupMember')
-      .aggregate()
-      .match({
-        uid: userid,
-      })
-      .lookup({
-        from: 'GroupApplication',
-        localField: 'groupId',
-        foreignField: 'groupId',
-        as: 'applications',
-      })
-      .unwind('$applications')
-      .project({
-        _id: 0,
-        appid: '$applications.appid',
-      })
-      .toArray()
+    try {
+      // First aggregation to get appids from GroupMember and GroupApplication collections
+      const groupPipeline = [
+        { $match: { uid: userid } },
+        {
+          $lookup: {
+            from: "GroupApplication",
+            localField: "groupId",
+            foreignField: "groupId",
+            as: "applications",
+          },
+        },
+        { $unwind: "$applications" },
+        {
+          $project: {
+            _id: 0,
+            appid: "$applications.appid",
+          },
+        },
+      ];
 
-    const res = db
-      .collection<Application>('Application')
-      .aggregate()
-      .match({
-        $and: [
-          {
-            $or: [
-              { appid: { $in: doc.map((v) => v.appid) } },
-              { createdBy: userid },
+      const doc = await db
+        .collection<GroupMember>("GroupMember")
+        .aggregate(groupPipeline)
+        .toArray();
+
+      // Second aggregation to get Application details and related collections
+      const applicationPipeline = [
+        {
+          $match: {
+            $and: [
+              {
+                $or: [
+                  { appid: { $in: doc.map((v) => v.appid) } },
+                  { createdBy: userid },
+                ],
+              },
+              { phase: { $ne: ApplicationPhase.Deleted } },
             ],
           },
-          { phase: { $ne: ApplicationPhase.Deleted } },
-        ],
-      })
-      .lookup({
-        from: 'ApplicationBundle',
-        localField: 'appid',
-        foreignField: 'appid',
-        as: 'bundle',
-      })
-      .unwind('$bundle')
-      .lookup({
-        from: 'Runtime',
-        localField: 'runtimeId',
-        foreignField: '_id',
-        as: 'runtime',
-      })
-      .unwind('$runtime')
-      .project<ApplicationWithRelations>({
-        'bundle.resource.requestCPU': 0,
-        'bundle.resource.requestMemory': 0,
-        'bundle.resource.dedicatedDatabase.requestCPU': 0,
-        'bundle.resource.dedicatedDatabase.requestMemory': 0,
-      })
-      .toArray()
+        },
+        {
+          $lookup: {
+            from: "ApplicationBundle",
+            localField: "appid",
+            foreignField: "appid",
+            as: "bundle",
+          },
+        },
+        { $unwind: "$bundle" },
+        {
+          $lookup: {
+            from: "Runtime",
+            localField: "runtimeId",
+            foreignField: "_id",
+            as: "runtime",
+          },
+        },
+        { $unwind: "$runtime" },
+        {
+          $project: {
+            "bundle.resource.requestCPU": 0,
+            "bundle.resource.requestMemory": 0,
+            "bundle.resource.dedicatedDatabase.requestCPU": 0,
+            "bundle.resource.dedicatedDatabase.requestMemory": 0,
+          },
+        },
+      ];
 
-    return res
+      const res = await db
+        .collection<Application>("Application")
+        .aggregate(applicationPipeline)
+        .toArray();
+
+      return res;
+    } catch (error) {
+      console.error("Error fetching applications by user:", error);
+      throw new Error("Failed to get applications data");
+    }
   }
 
   async findOne(appid: string) {
