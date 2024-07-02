@@ -237,19 +237,20 @@ export class ApplicationController {
     return ResponseUtil.ok(doc)
   }
 
-  /**
-   * Update application state
-   */
-  @ApiOperation({ summary: 'Update application state' })
-  @ApiResponseObject(Application)
-  @UseGuards(JwtAuthGuard, ApplicationAuthGuard)
-  @Patch(':appid/state')
-  async updateState(
-    @Param('appid') appid: string,
-    @Body() dto: UpdateApplicationStateDto,
-    @InjectApplication() app: Application,
-    @InjectGroup() group: GroupWithRole,
-  ) {
+/**
+ * Update application state
+ */
+@ApiOperation({ summary: 'Update application state' })
+@ApiResponseObject(Application)
+@UseGuards(JwtAuthGuard, ApplicationAuthGuard)
+@Patch(':appid/state')
+async updateState(
+  @Param('appid') appid: string,
+  @Body() dto: UpdateApplicationStateDto,
+  @InjectApplication() app: Application,
+  @InjectGroup() group: GroupWithRole,
+) {
+  try {
     if (dto.state === ApplicationState.Deleted) {
       throw new ForbiddenException('cannot update state to deleted')
     }
@@ -306,7 +307,11 @@ export class ApplicationController {
 
     const doc = await this.application.updateState(appid, dto.state)
     return ResponseUtil.ok(doc)
+  } catch (error) {
+    this.logger.error(`Failed to update application state: ${error.message}`, error.stack)
+    return ResponseUtil.error('An error occurred while updating the application state')
   }
+}
 
   /**
    * Update application bundle
