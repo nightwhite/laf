@@ -101,12 +101,16 @@ async findAll(uid: ObjectId) {
           {
             $lookup: {
               from: "GroupMember",
-              localField: "groupId",
-              foreignField: "groupId",
+              let: { groupId: "$groupId" },
               pipeline: [
                 {
                   $match: {
-                    uid,
+                    $expr: {
+                      $and: [
+                        { $eq: ["$groupId", "$$groupId"] },
+                        { $eq: ["$uid", uid] },
+                      ],
+                    },
                   },
                 },
               ],
