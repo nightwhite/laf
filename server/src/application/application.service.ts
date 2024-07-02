@@ -31,12 +31,12 @@ import { ApplicationCreatingEvent } from './events/application-creating.event'
 
 @Injectable()
 export class ApplicationService {
-  private readonly logger = new Logger(ApplicationService.name)
+  private readonly logger = new Logger(ApplicationService.name);
 
   constructor(
     private readonly groupService: GroupService,
     private readonly regionService: RegionService,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
   /**
@@ -50,25 +50,25 @@ export class ApplicationService {
     userid: ObjectId,
     appid: string,
     dto: CreateApplicationDto,
-    isTrialTier: boolean,
+    isTrialTier: boolean
   ) {
-    const client = SystemDatabase.client
-    const db = client.db()
-    const session = client.startSession()
-    const region = await this.regionService.findOne(regionId)
-    assert(region, 'region cannot be empty')
+    const client = SystemDatabase.client;
+    const db = client.db();
+    const session = client.startSession();
+    const region = await this.regionService.findOne(regionId);
+    assert(region, "region cannot be empty");
 
     try {
       // start transaction
-      session.startTransaction()
+      session.startTransaction();
 
       // create application configuration
       const appSecret = {
         name: APPLICATION_SECRET_KEY,
         value: GenerateAlphaNumericPassword(64),
-      }
+      };
       await db
-        .collection<ApplicationConfiguration>('ApplicationConfiguration')
+        .collection<ApplicationConfiguration>("ApplicationConfiguration")
         .insertOne(
           {
             appid,
@@ -77,11 +77,11 @@ export class ApplicationService {
             createdAt: new Date(),
             updatedAt: new Date(),
           },
-          { session },
-        )
+          { session }
+        );
 
       // create application bundle
-      await db.collection<ApplicationBundle>('ApplicationBundle').insertOne(
+      await db.collection<ApplicationBundle>("ApplicationBundle").insertOne(
         {
           appid,
           resource: this.buildBundleResource(region, dto),
@@ -90,8 +90,8 @@ export class ApplicationService {
           createdAt: new Date(),
           updatedAt: new Date(),
         },
-        { session },
-      )
+        { session }
+      );
 
       await this.eventEmitter.emitAsync(
         ApplicationCreatingEvent.eventName,
@@ -100,11 +100,11 @@ export class ApplicationService {
           appid,
           session,
           dto,
-        }),
-      )
+        })
+      );
 
       // create application
-      await db.collection<Application>('Application').insertOne(
+      await db.collection<Application>("Application").insertOne(
         {
           appid,
           name: dto.name,
@@ -120,21 +120,21 @@ export class ApplicationService {
           createdAt: new Date(),
           updatedAt: new Date(),
         },
-        { session },
-      )
+        { session }
+      );
 
-      await this.groupService.create(appid, userid, appid)
+      await this.groupService.create(appid, userid, appid);
       // commit transaction
-      await session.commitTransaction()
+      await session.commitTransaction();
     } catch (error) {
-      await session.abortTransaction()
-      throw Error(error)
+      await session.abortTransaction();
+      throw Error(error);
     } finally {
-      if (session) await session.endSession()
+      if (session) await session.endSession();
     }
   }
 
-  async findAllByUser(userid: ObjectId) {
+  async findAllByUser(userid: ObjectId): Promise<ApplicationWithRelations[]> {
     const db = SystemDatabase.db;
 
     try {
@@ -163,16 +163,16 @@ export class ApplicationService {
         .aggregate(groupPipeline)
         .toArray();
 
+      // Collect appids from the first aggregation
+      const appids = doc.map((v) => v.appid);
+
       // Second aggregation to get Application details and related collections
       const applicationPipeline = [
         {
           $match: {
             $and: [
               {
-                $or: [
-                  { appid: { $in: doc.map((v) => v.appid) } },
-                  { createdBy: userid },
-                ],
+                $or: [{ appid: { $in: appids } }, { createdBy: userid }],
               },
               { phase: { $ne: ApplicationPhase.Deleted } },
             ],
@@ -211,7 +211,8 @@ export class ApplicationService {
         .aggregate(applicationPipeline)
         .toArray();
 
-      return res;
+      // Ensure the result matches the expected type
+      return res as ApplicationWithRelations[];
     } catch (error) {
       console.error("Error fetching applications by user:", error);
       throw new Error("Failed to get applications data");
@@ -219,174 +220,174 @@ export class ApplicationService {
   }
 
   async findOne(appid: string) {
-    const db = SystemDatabase.db
+    const db = SystemDatabase.db;
 
     const doc = await db
-      .collection('Application')
+      .collection("Application")
       .aggregate<ApplicationWithRelations>()
       .match({ appid })
       .lookup({
-        from: 'ApplicationBundle',
-        localField: 'appid',
-        foreignField: 'appid',
-        as: 'bundle',
+        from: "ApplicationBundle",
+        localField: "appid",
+        foreignField: "appid",
+        as: "bundle",
       })
-      .unwind('$bundle')
+      .unwind("$bundle")
       .lookup({
-        from: 'Runtime',
-        localField: 'runtimeId',
-        foreignField: '_id',
-        as: 'runtime',
+        from: "Runtime",
+        localField: "runtimeId",
+        foreignField: "_id",
+        as: "runtime",
       })
-      .unwind('$runtime')
+      .unwind("$runtime")
       .lookup({
-        from: 'ApplicationConfiguration',
-        localField: 'appid',
-        foreignField: 'appid',
-        as: 'configuration',
+        from: "ApplicationConfiguration",
+        localField: "appid",
+        foreignField: "appid",
+        as: "configuration",
       })
-      .unwind('$configuration')
+      .unwind("$configuration")
       .lookup({
-        from: 'RuntimeDomain',
-        localField: 'appid',
-        foreignField: 'appid',
-        as: 'domain',
+        from: "RuntimeDomain",
+        localField: "appid",
+        foreignField: "appid",
+        as: "domain",
       })
-      .unwind({ path: '$domain', preserveNullAndEmptyArrays: true })
+      .unwind({ path: "$domain", preserveNullAndEmptyArrays: true })
       .project<ApplicationWithRelations>({
-        'bundle.resource.requestCPU': 0,
-        'bundle.resource.requestMemory': 0,
-        'bundle.resource.dedicatedDatabase.requestCPU': 0,
-        'bundle.resource.dedicatedDatabase.requestMemory': 0,
+        "bundle.resource.requestCPU": 0,
+        "bundle.resource.requestMemory": 0,
+        "bundle.resource.dedicatedDatabase.requestCPU": 0,
+        "bundle.resource.dedicatedDatabase.requestMemory": 0,
       })
-      .next()
+      .next();
 
-    return doc
+    return doc;
   }
 
   async findOneUnsafe(appid: string) {
-    const db = SystemDatabase.db
+    const db = SystemDatabase.db;
 
     const doc = await db
-      .collection('Application')
+      .collection("Application")
       .aggregate<ApplicationWithRelations>()
       .match({ appid })
       .lookup({
-        from: 'Region',
-        localField: 'regionId',
-        foreignField: '_id',
-        as: 'region',
+        from: "Region",
+        localField: "regionId",
+        foreignField: "_id",
+        as: "region",
       })
-      .unwind('$region')
+      .unwind("$region")
       .lookup({
-        from: 'ApplicationBundle',
-        localField: 'appid',
-        foreignField: 'appid',
-        as: 'bundle',
+        from: "ApplicationBundle",
+        localField: "appid",
+        foreignField: "appid",
+        as: "bundle",
       })
-      .unwind('$bundle')
+      .unwind("$bundle")
       .lookup({
-        from: 'Runtime',
-        localField: 'runtimeId',
-        foreignField: '_id',
-        as: 'runtime',
+        from: "Runtime",
+        localField: "runtimeId",
+        foreignField: "_id",
+        as: "runtime",
       })
-      .unwind('$runtime')
+      .unwind("$runtime")
       .lookup({
-        from: 'ApplicationConfiguration',
-        localField: 'appid',
-        foreignField: 'appid',
-        as: 'configuration',
+        from: "ApplicationConfiguration",
+        localField: "appid",
+        foreignField: "appid",
+        as: "configuration",
       })
-      .unwind('$configuration')
+      .unwind("$configuration")
       .lookup({
-        from: 'RuntimeDomain',
-        localField: 'appid',
-        foreignField: 'appid',
-        as: 'domain',
+        from: "RuntimeDomain",
+        localField: "appid",
+        foreignField: "appid",
+        as: "domain",
       })
-      .unwind({ path: '$domain', preserveNullAndEmptyArrays: true })
-      .next()
+      .unwind({ path: "$domain", preserveNullAndEmptyArrays: true })
+      .next();
 
-    return doc
+    return doc;
   }
 
   async findTrialApplications(userid: ObjectId) {
-    const db = SystemDatabase.db
+    const db = SystemDatabase.db;
 
     const apps = await db
-      .collection<Application>('Application')
+      .collection<Application>("Application")
       .aggregate<Application>()
       .match({ createdBy: userid })
       .lookup({
-        from: 'ApplicationBundle',
-        localField: 'appid',
-        foreignField: 'appid',
-        as: 'bundle',
+        from: "ApplicationBundle",
+        localField: "appid",
+        foreignField: "appid",
+        as: "bundle",
       })
-      .unwind('$bundle')
-      .match({ 'bundle.isTrialTier': true })
-      .toArray()
+      .unwind("$bundle")
+      .match({ "bundle.isTrialTier": true })
+      .toArray();
 
-    return apps
+    return apps;
   }
 
   async countByUser(userid: ObjectId) {
-    const db = SystemDatabase.db
+    const db = SystemDatabase.db;
 
     const count = await db
-      .collection<Application>('Application')
-      .countDocuments({ createdBy: userid })
+      .collection<Application>("Application")
+      .countDocuments({ createdBy: userid });
 
-    return count
+    return count;
   }
 
   async updateName(appid: string, name: string) {
-    const db = SystemDatabase.db
+    const db = SystemDatabase.db;
     const res = await db
-      .collection<Application>('Application')
+      .collection<Application>("Application")
       .findOneAndUpdate(
         { appid },
         { $set: { name, updatedAt: new Date() } },
-        { returnDocument: 'after' },
-      )
+        { returnDocument: "after" }
+      );
 
-    return res.value
+    return res.value;
   }
 
   async updateState(appid: string, state: ApplicationState) {
-    const db = SystemDatabase.db
+    const db = SystemDatabase.db;
     const res = await db
-      .collection<Application>('Application')
+      .collection<Application>("Application")
       .findOneAndUpdate(
         { appid },
         { $set: { state, updatedAt: new Date() } },
-        { returnDocument: 'after' },
-      )
+        { returnDocument: "after" }
+      );
 
-    return res.value
+    return res.value;
   }
 
   async updateBundle(
     appid: string,
     dto: UpdateApplicationBundleDto,
-    isTrialTier: boolean,
+    isTrialTier: boolean
   ) {
-    const region = await this.regionService.findByAppId(appid)
-    assert(region, 'region cannot be empty')
+    const region = await this.regionService.findByAppId(appid);
+    assert(region, "region cannot be empty");
 
-    const resource = this.buildBundleResource(region, dto)
-    const autoscaling = this.buildAutoscalingConfig(dto)
+    const resource = this.buildBundleResource(region, dto);
+    const autoscaling = this.buildAutoscalingConfig(dto);
 
-    const client = SystemDatabase.client
-    const db = SystemDatabase.db
-    const session = client.startSession()
+    const client = SystemDatabase.client;
+    const db = SystemDatabase.db;
+    const session = client.startSession();
 
     try {
-      session.startTransaction()
+      session.startTransaction();
 
       const res = await db
-        .collection<ApplicationBundle>('ApplicationBundle')
+        .collection<ApplicationBundle>("ApplicationBundle")
         .findOneAndUpdate(
           { appid },
           {
@@ -394,37 +395,37 @@ export class ApplicationService {
           },
           {
             projection: {
-              'bundle.resource.requestCPU': 0,
-              'bundle.resource.requestMemory': 0,
-              'bundle.resource.dedicatedDatabase.requestCPU': 0,
-              'bundle.resource.dedicatedDatabase.requestMemory': 0,
+              "bundle.resource.requestCPU": 0,
+              "bundle.resource.requestMemory": 0,
+              "bundle.resource.dedicatedDatabase.requestCPU": 0,
+              "bundle.resource.dedicatedDatabase.requestMemory": 0,
             },
-            returnDocument: 'after',
-          },
-        )
+            returnDocument: "after",
+          }
+        );
 
-      await session.commitTransaction()
-      return res.value
+      await session.commitTransaction();
+      return res.value;
     } catch (error) {
-      await session.abortTransaction()
-      this.logger.error(error)
-      throw error
+      await session.abortTransaction();
+      this.logger.error(error);
+      throw error;
     } finally {
-      await session.endSession()
+      await session.endSession();
     }
   }
 
   async remove(appid: string) {
-    const db = SystemDatabase.db
+    const db = SystemDatabase.db;
     const doc = await db
-      .collection<Application>('Application')
+      .collection<Application>("Application")
       .findOneAndUpdate(
         { appid },
         { $set: { state: ApplicationState.Deleted, updatedAt: new Date() } },
-        { returnDocument: 'after' },
-      )
+        { returnDocument: "after" }
+      );
 
-    return doc.value
+    return doc.value;
   }
 
   /**
@@ -432,55 +433,55 @@ export class ApplicationService {
    * @returns
    */
   async tryGenerateUniqueAppid() {
-    const db = SystemDatabase.db
+    const db = SystemDatabase.db;
 
     for (let i = 0; i < 10; i++) {
-      const appid = this.generateAppID(ServerConfig.APPID_LENGTH)
+      const appid = this.generateAppID(ServerConfig.APPID_LENGTH);
       const existed = await db
-        .collection<Application>('Application')
-        .findOne({ appid })
+        .collection<Application>("Application")
+        .findOne({ appid });
 
-      if (!existed) return appid
+      if (!existed) return appid;
     }
 
-    throw new Error('Generate appid failed')
+    throw new Error("Generate appid failed");
   }
 
   private generateAppID(len: number) {
-    len = len || 6
+    len = len || 6;
 
     // ensure prefixed with letter
-    const only_alpha = 'abcdefghijklmnopqrstuvwxyz'
-    const alphanumeric = 'abcdefghijklmnopqrstuvwxyz0123456789'
-    const prefix = nanoid.customAlphabet(only_alpha, 1)()
-    const nano = nanoid.customAlphabet(alphanumeric, len - 1)
-    return prefix + nano()
+    const only_alpha = "abcdefghijklmnopqrstuvwxyz";
+    const alphanumeric = "abcdefghijklmnopqrstuvwxyz0123456789";
+    const prefix = nanoid.customAlphabet(only_alpha, 1)();
+    const nano = nanoid.customAlphabet(alphanumeric, len - 1);
+    return prefix + nano();
   }
 
   private buildBundleResource(region: Region, dto: UpdateApplicationBundleDto) {
-    const bundleConf = region.bundleConf
-    const cpuRatio = bundleConf?.cpuRequestLimitRatio || 0.1
-    const memoryRatio = bundleConf?.memoryRequestLimitRatio || 0.5
+    const bundleConf = region.bundleConf;
+    const cpuRatio = bundleConf?.cpuRequestLimitRatio || 0.1;
+    const memoryRatio = bundleConf?.memoryRequestLimitRatio || 0.5;
 
-    const requestCPU = Math.floor(dto.cpu * cpuRatio)
-    const requestMemory = Math.floor(dto.memory * memoryRatio)
-    const limitCountOfCloudFunction = Math.floor(dto.cpu * 1)
+    const requestCPU = Math.floor(dto.cpu * cpuRatio);
+    const requestMemory = Math.floor(dto.memory * memoryRatio);
+    const limitCountOfCloudFunction = Math.floor(dto.cpu * 1);
 
-    const magicNumber = Math.floor(dto.cpu * 0.03)
-    const limitCountOfBucket = Math.max(3, magicNumber)
-    const limitCountOfDatabasePolicy = Math.max(3, magicNumber)
-    const limitCountOfTrigger = Math.max(1, magicNumber)
-    const limitCountOfWebsiteHosting = Math.max(3, magicNumber)
-    const limitDatabaseTPS = Math.floor(dto.cpu * 0.1)
-    const limitStorageTPS = Math.floor(dto.cpu * 1)
-    const reservedTimeAfterExpired = 60 * 60 * 24 * 31 // 31 days
+    const magicNumber = Math.floor(dto.cpu * 0.03);
+    const limitCountOfBucket = Math.max(3, magicNumber);
+    const limitCountOfDatabasePolicy = Math.max(3, magicNumber);
+    const limitCountOfTrigger = Math.max(1, magicNumber);
+    const limitCountOfWebsiteHosting = Math.max(3, magicNumber);
+    const limitDatabaseTPS = Math.floor(dto.cpu * 0.1);
+    const limitStorageTPS = Math.floor(dto.cpu * 1);
+    const reservedTimeAfterExpired = 60 * 60 * 24 * 31; // 31 days
 
     const ddbRequestCPU = dto.dedicatedDatabase
       ? Math.floor(dto.dedicatedDatabase.cpu * cpuRatio)
-      : 0
+      : 0;
     const ddbRequestMemory = dto.dedicatedDatabase
       ? Math.floor(dto.dedicatedDatabase.memory * memoryRatio)
-      : 0
+      : 0;
 
     const resource = new ApplicationBundleResource({
       limitCPU: dto.cpu,
@@ -507,9 +508,9 @@ export class ApplicationService {
         capacity: dto.dedicatedDatabase?.capacity || 0,
         replicas: dto.dedicatedDatabase?.replicas || 0,
       },
-    })
+    });
 
-    return resource
+    return resource;
   }
 
   private buildAutoscalingConfig(dto: UpdateApplicationBundleDto) {
@@ -520,15 +521,15 @@ export class ApplicationService {
       targetCPUUtilizationPercentage: null,
       targetMemoryUtilizationPercentage: null,
       ...dto.autoscaling,
-    }
-    return autoscaling
+    };
+    return autoscaling;
   }
 
   private getHourTime() {
-    const latestTime = new Date()
-    latestTime.setMinutes(0)
-    latestTime.setSeconds(0)
-    latestTime.setMilliseconds(0)
-    return latestTime
+    const latestTime = new Date();
+    latestTime.setMinutes(0);
+    latestTime.setSeconds(0);
+    latestTime.setMilliseconds(0);
+    return latestTime;
   }
 }
