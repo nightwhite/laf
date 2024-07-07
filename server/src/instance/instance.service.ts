@@ -370,7 +370,7 @@ export class InstanceService {
                 initialDelaySeconds: 0,
                 periodSeconds: 60,
                 timeoutSeconds: 3,
-                failureThreshold: 1,
+                failureThreshold: 100,
               },
               securityContext: {
                 allowPrivilegeEscalation: false,
